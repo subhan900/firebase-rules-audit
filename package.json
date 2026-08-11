@@ -1,0 +1,37 @@
+{
+    "name": "firebase-rules-audit",
+    "version": "0.1.0",
+    "description": "Deterministic, local-only CLI that statically audits Firebase Firestore and Cloud Storage security rules for open access, missing auth checks, and other common misconfigurations.",
+    "main": "src/index.js",
+    "bin": {
+          "firebase-rules-audit": "bin/firebase-rules-audit.js"
+    },
+    "engines": {
+          "node": ">=16"
+    },
+    "scripts": {
+          "test": "node --test test"
+    },
+    "keywords": [
+          "firebase",
+          "firestore",
+          "cloud-storage",
+          "security-rules",
+          "audit",
+          "cli",
+          "lint",
+          "static-analysis"
+    ],
+    "author": "Subhan Ahmed",
+    "license": "MIT",
+    "repository": {
+          "type": "git",
+          "url": "git+https://github.com/subhan900/firebase-rules-audit.git"
+    },
+    "files": [
+          "bin",
+          "src",
+          "README.md",
+          "LICENSE"
+    ]
+}
