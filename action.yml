@@ -1,0 +1,82 @@
+name: 'Firebase Rules Audit'
+description: 'Statically audits Firebase Firestore/Cloud Storage security rules for open access, missing auth checks, and other common misconfigurations.'
+author: 'Subhan Ahmed'
+branding:
+  icon: 'shield'
+  color: 'orange'
+
+inputs:
+  files:
+    description: 'Space-separated rules file paths to audit, relative to working-directory. Defaults to firestore.rules and storage.rules.'
+    required: false
+    default: ''
+  fail-on-high:
+    description: 'Fail the action when one or more high-severity findings are found.'
+    required: false
+    default: 'true'
+  working-directory:
+    description: 'Directory to run the audit from, relative to the workspace root.'
+    required: false
+    default: '.'
+
+outputs:
+  total:
+    description: 'Total number of findings.'
+    value: ${{ steps.audit.outputs.total }}
+  high:
+    description: 'Number of high-severity findings.'
+    value: ${{ steps.audit.outputs.high }}
+  medium:
+    description: 'Number of medium-severity findings.'
+    value: ${{ steps.audit.outputs.medium }}
+  low:
+    description: 'Number of low-severity findings.'
+    value: ${{ steps.audit.outputs.low }}
+  report-json:
+    description: 'Path to the JSON report written by the action.'
+    value: ${{ steps.audit.outputs.report-json }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run firebase-rules-audit
+      id: audit
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        AUDIT_FILES: ${{ inputs.files }}
+        AUDIT_FAIL_ON_HIGH: ${{ inputs.fail-on-high }}
+      run: |
+        set +e
+        CLI="$GITHUB_ACTION_PATH/bin/firebase-rules-audit.js"
+        FILES_ARG="$AUDIT_FILES"
+
+        node "$CLI" $FILES_ARG --json > firebase-rules-audit-report.json
+        json_status=$?
+        node "$CLI" $FILES_ARG
+        console_status=$?
+        set -e
+
+        if [ "$json_status" = "1" ]; then
+          echo "::error::firebase-rules-audit exited with an error (missing or unreadable rules files)."
+          exit 1
+        fi
+
+        node -e '
+          var fs = require("fs");
+          var data = JSON.parse(fs.readFileSync("firebase-rules-audit-report.json", "utf8"));
+          var s = data.summary;
+          console.log("total=" + s.total);
+          console.log("high=" + s.high);
+          console.log("medium=" + s.medium);
+          console.log("low=" + s.low);
+        ' >> "$GITHUB_OUTPUT"
+
+        echo "report-json=$(pwd)/firebase-rules-audit-report.json" >> "$GITHUB_OUTPUT"
+
+        if [ "$AUDIT_FAIL_ON_HIGH" = "true" ] && [ "$json_status" = "2" ]; then
+          echo "::error::firebase-rules-audit found high-severity findings."
+          exit 1
+        fi
+
+        exit 0

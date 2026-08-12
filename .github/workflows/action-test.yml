@@ -1,0 +1,100 @@
+name: Test Composite Action
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  expect-failure:
+    name: Fails on high-severity findings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run audit on a vulnerable fixture (expected to fail)
+        id: audit
+        uses: ./
+        continue-on-error: true
+        with:
+          files: test/fixtures/firestore.rules
+
+      - name: Verify the action failed as expected
+        run: |
+          if [ "${{ steps.audit.outcome }}" != "failure" ]; then
+            echo "::error::Expected the action to fail on a fixture with high-severity findings, but outcome was '${{ steps.audit.outcome }}'."
+            exit 1
+          fi
+          if [ "${{ steps.audit.outputs.high }}" -lt 1 ]; then
+            echo "::error::Expected at least one high-severity finding, got '${{ steps.audit.outputs.high }}'."
+            exit 1
+          fi
+          echo "OK: action failed as expected with high=${{ steps.audit.outputs.high }}, total=${{ steps.audit.outputs.total }}"
+
+  expect-pass:
+    name: Passes on a clean rules file
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write a clean rules file
+        run: |
+          mkdir -p tmp-clean
+          echo 'match /users/{userId} { allow read, write: if request.auth != null && request.auth.uid == userId; }' > tmp-clean/firestore.rules
+
+      - name: Run audit on the clean fixture (expected to pass)
+        id: audit
+        uses: ./
+        with:
+          files: tmp-clean/firestore.rules
+
+      - name: Verify no findings were reported
+        run: |
+          if [ "${{ steps.audit.outputs.total }}" != "0" ]; then
+            echo "::error::Expected zero findings on a clean rules file, got '${{ steps.audit.outputs.total }}'."
+            exit 1
+          fi
+          echo "OK: no findings reported"
+
+  expect-nonblocking:
+    name: Reports but does not fail when fail-on-high is disabled
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run audit with fail-on-high disabled
+        id: audit
+        uses: ./
+        with:
+          files: test/fixtures/firestore.rules
+          fail-on-high: 'false'
+
+      - name: Verify high findings were still reported in outputs
+        run: |
+          if [ "${{ steps.audit.outputs.high }}" -lt 1 ]; then
+            echo "::error::Expected high-severity findings to still be reported, got '${{ steps.audit.outputs.high }}'."
+            exit 1
+          fi
+          echo "OK: high=${{ steps.audit.outputs.high }} reported without failing the step"
+
+  expect-hard-error:
+    name: Fails with an error on missing rules files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run audit with a nonexistent file (expected to fail)
+        id: audit
+        uses: ./
+        continue-on-error: true
+        with:
+          files: does-not-exist.rules
+
+      - name: Verify the action failed as expected
+        run: |
+          if [ "${{ steps.audit.outcome }}" != "failure" ]; then
+            echo "::error::Expected the action to fail on a missing rules file, but outcome was '${{ steps.audit.outcome }}'."
+            exit 1
+          fi
+          echo "OK: action failed as expected on a missing rules file"

@@ -94,6 +94,47 @@ The default console report shows each finding with its severity, rule name, path
 - `1`: No rules files were found, or a supplied file does not exist
 - `2`: At least one high-severity finding was found
 
+## GitHub Action
+
+Run the audit as a CI gate on every push and pull request using this repository as a composite action:
+
+```yaml
+name: Firebase Rules Audit
+
+on:
+  pull_request:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subhan900/firebase-rules-audit@main
+        with:
+          files: firestore.rules storage.rules
+          fail-on-high: 'true'
+```
+
+### Inputs
+
+| Name | Description | Default |
+|---|---|---|
+| `files` | Space-separated rules file paths to audit, relative to `working-directory`. Defaults to `firestore.rules` and `storage.rules`. | `''` |
+| `fail-on-high` | Fail the action when one or more high-severity findings are found. | `'true'` |
+| `working-directory` | Directory to run the audit from, relative to the workspace root. | `'.'` |
+
+### Outputs
+
+| Name | Description |
+|---|---|
+| `total` | Total number of findings. |
+| `high` | Number of high-severity findings. |
+| `medium` | Number of medium-severity findings. |
+| `low` | Number of low-severity findings. |
+| `report-json` | Path to the JSON report written by the action. |
+
+The action always prints the console report and writes a JSON report to `firebase-rules-audit-report.json` in the working directory, even when `fail-on-high` is `'false'`, so you can inspect findings without blocking the build. A missing or unreadable rules file always fails the action, regardless of `fail-on-high`.
+
 ## Development
 
 Run the test suite with:
