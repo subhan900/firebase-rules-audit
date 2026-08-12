@@ -1,5 +1,5 @@
 name: 'Firebase Rules Audit'
-description: 'Statically audits Firebase Firestore/Cloud Storage security rules for open access, missing auth checks, and other common misconfigurations.'
+description: 'Audit Firebase Firestore and Cloud Storage rules for common security misconfigurations.'
 author: 'Subhan Ahmed'
 branding:
   icon: 'shield'
@@ -50,18 +50,15 @@ runs:
         set +e
         CLI="$GITHUB_ACTION_PATH/bin/firebase-rules-audit.js"
         FILES_ARG="$AUDIT_FILES"
-
         node "$CLI" $FILES_ARG --json > firebase-rules-audit-report.json
         json_status=$?
         node "$CLI" $FILES_ARG
         console_status=$?
         set -e
-
         if [ "$json_status" = "1" ]; then
           echo "::error::firebase-rules-audit exited with an error (missing or unreadable rules files)."
           exit 1
         fi
-
         node -e '
           var fs = require("fs");
           var data = JSON.parse(fs.readFileSync("firebase-rules-audit-report.json", "utf8"));
@@ -71,12 +68,9 @@ runs:
           console.log("medium=" + s.medium);
           console.log("low=" + s.low);
         ' >> "$GITHUB_OUTPUT"
-
         echo "report-json=$(pwd)/firebase-rules-audit-report.json" >> "$GITHUB_OUTPUT"
-
         if [ "$AUDIT_FAIL_ON_HIGH" = "true" ] && [ "$json_status" = "2" ]; then
           echo "::error::firebase-rules-audit found high-severity findings."
           exit 1
         fi
-
         exit 0
