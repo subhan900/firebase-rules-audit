@@ -1,5 +1,7 @@
 # firebase-rules-audit
 
+[![CI](https://github.com/subhan900/firebase-rules-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/subhan900/firebase-rules-audit/actions/workflows/ci.yml)
+
 A deterministic, local-only command-line tool that reviews Firebase Firestore and Cloud Storage security rules for common risky access patterns.
 
 It reads rule files on your machine only. It does not connect to Firebase, deploy rules, or change your files.
@@ -109,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: subhan900/firebase-rules-audit@main
+      - uses: subhan900/firebase-rules-audit@v1
         with:
           files: firestore.rules storage.rules
           fail-on-high: 'true'
@@ -118,7 +120,7 @@ jobs:
 ### Inputs
 
 | Name | Description | Default |
-|---|---|---|
+| --- | --- | --- |
 | `files` | Space-separated rules file paths to audit, relative to `working-directory`. Defaults to `firestore.rules` and `storage.rules`. | `''` |
 | `fail-on-high` | Fail the action when one or more high-severity findings are found. | `'true'` |
 | `working-directory` | Directory to run the audit from, relative to the workspace root. | `'.'` |
@@ -126,7 +128,7 @@ jobs:
 ### Outputs
 
 | Name | Description |
-|---|---|
+| --- | --- |
 | `total` | Total number of findings. |
 | `high` | Number of high-severity findings. |
 | `medium` | Number of medium-severity findings. |
@@ -134,6 +136,10 @@ jobs:
 | `report-json` | Path to the JSON report written by the action. |
 
 The action always prints the console report and writes a JSON report to `firebase-rules-audit-report.json` in the working directory, even when `fail-on-high` is `'false'`, so you can inspect findings without blocking the build. A missing or unreadable rules file always fails the action, regardless of `fail-on-high`.
+
+### Versioning
+
+Use `@v1` for the latest stable v1 release. For maximum supply-chain protection, pin the action to a full commit SHA.
 
 ## Development
 
@@ -143,6 +149,10 @@ Run the test suite with:
 npm test
 ```
 
+## Security
+
+Please report vulnerabilities privately; see [SECURITY.md](SECURITY.md).
+
 ## License
 
-[MIT](LICENSE)
+MIT
