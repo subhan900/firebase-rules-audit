@@ -111,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: subhan900/firebase-rules-audit@v1
+      - uses: subhan900/firebase-rules-audit@v1.0.0
         with:
           files: firestore.rules storage.rules
           fail-on-high: 'true'
@@ -139,7 +139,7 @@ The action always prints the console report and writes a JSON report to `firebas
 
 ### Versioning
 
-Use `@v1` for the latest stable v1 release. For maximum supply-chain protection, pin the action to a full commit SHA.
+Use `@v1.0.0` for the latest stable v1 release. For maximum supply-chain protection, pin the action to a full commit SHA.
 
 ## Development
 
