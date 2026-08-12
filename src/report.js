@@ -36,11 +36,11 @@ function toMarkdown(result) {
     lines.push('No findings.');
     return lines.join(String.fromCharCode(10));
   }
-  lines.push('| Severity | Rule | Path | Line | Message |');
-  lines.push('|---|---|---|---|---|');
+  lines.push('| Severity | Rule | File | Path | Line | Message |');
+  lines.push('|---|---|---|---|---|---|');
   for (var i = 0; i < result.findings.length; i += 1) {
     var f = result.findings[i];
-    lines.push('| ' + f.severity + ' | ' + f.rule + ' | ' + f.path + ' | ' + f.line + ' | ' + f.message + ' |');
+    lines.push('| ' + f.severity + ' | ' + f.rule + ' | ' + (f.file || '') + ' | ' + f.path + ' | ' + f.line + ' | ' + f.message + ' |');
   }
   return lines.join(String.fromCharCode(10));
 }
@@ -65,7 +65,8 @@ function toConsole(result, options) {
     var f = result.findings[i];
     var color = useColor ? (COLORS[f.severity] || '') : '';
     var reset = useColor ? COLORS.reset : '';
-    lines.push(color + '[' + f.severity.toUpperCase() + ']' + reset + ' ' + f.rule + ' - ' + f.message + ' (line ' + f.line + ')');
+    var location = (f.file ? f.file + ':' : '') + f.line;
+    lines.push(color + '[' + f.severity.toUpperCase() + ']' + reset + ' ' + f.rule + ' - ' + f.message + ' (' + location + ')');
   }
   lines.push('');
   lines.push('Summary: ' + summary.high + ' high, ' + summary.medium + ' medium, ' + summary.low + ' low.');

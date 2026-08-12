@@ -10,7 +10,7 @@
           "node": ">=16"
     },
     "scripts": {
-          "test": "node --test test"
+          "test": "node --test"
     },
     "keywords": [
           "firebase",

@@ -92,11 +92,10 @@ function protectPathParams(source) {
         }
       }
     }
+    out += source[i];
+    i += 1;
   }
-  out += source[i];
-  i += 1;
-}
-return out;
+  return out;
 }
 
 function restorePathParams(text) {
